@@ -4,16 +4,30 @@ import GoogleSignIn
 import SwiftUI
 
 class AuthenticationViewModel: ObservableObject {
+    enum UserType {
+        case protecting
+        case protected
+        case none
+    }
+    
+    @Published var state: SignInState = .signedOut
+    let locationManager = LocationManager()
+    
+    private var timer: Timer?
+    private var userId: String?
+    
+    @Published var userType: UserType = .none
+    @Published var protectorName: String = ""
+    @Published var protectorID: String = ""
+    @Published var alarmStatus: Int = 0
+    @Published var protectingEmail : String = ""
+    
+    
     enum SignInState {
         case signedIn
         case signedOut
     }
 
-    @Published var state: SignInState = .signedOut
-    let locationManager = LocationManager()
-
-    private var timer: Timer?
-    private var userId: String?
 
     func signIn() {
         if GIDSignIn.sharedInstance.hasPreviousSignIn() {
@@ -47,17 +61,53 @@ class AuthenticationViewModel: ObservableObject {
             }
         }
     }
+    
+    func loadUserInfo() {
+        guard let userId = self.userId else { return }
+        let ref = Database.database(url: "https://protectapp-2023-2-default-rtdb.firebaseio.com").reference()
+        let userRef = ref.child("users").child(userId)
+        
+        userRef.observeSingleEvent(of: .value) { [weak self] snapshot in
+            if snapshot.exists() {
+                if let userDataDict = snapshot.value as? [String: Any] {
+                    if let userType = userDataDict["UserType"] as? String {
+                        if userType == "protecting" {
+                            self?.userType = .protecting
+                            self?.protectingEmail = "\(userDataDict["protectingEmail"] ?? "")"
+                        } else if userType == "protected" {
+                            self?.userType = .protected
+                            self?.protectorName = "\(userDataDict["protector"] ?? "")"
+                            self?.protectorID = "\(userDataDict["id"] ?? "")"
+                            self?.alarmStatus = userDataDict["alarm"] as? Int ?? 0
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    func chooseProtector() {
+        userType = .protecting
+    }
+    
+    func chooseProtected() {
+        userType = .protected
+    }
+    
 
     private func createUserEntry(userId: String, user: GIDGoogleUser?) {
         let datas: [String: Any] = [
             "id": randomString(length: 5),
             "name": user?.profile?.givenName,
             "surname": user?.profile?.familyName,
-            "protector": "noone",
-            "protecting": "noone",
+            "protectorEmail": "noone",
+            "protectorName": "noone",
+            "protectingEmail": "noone",
+            "protectingName": "noone",
             "email" : user?.profile?.email,
             "alarm": 0,
-            "locations": [:]
+            "locations": [:],
+            "UserType" : "NotSelected"
         ]
 
         let ref = Database.database(url: "https://protectapp-2023-2-default-rtdb.firebaseio.com").reference()
@@ -109,6 +159,7 @@ class AuthenticationViewModel: ObservableObject {
             timer?.invalidate()
             timer = nil
             userId = nil
+            userType = .none
         } catch {
             print(error.localizedDescription)
         }
@@ -175,11 +226,18 @@ class AuthenticationViewModel: ObservableObject {
                 // Update the current user's information
                 let email = "\(protectorData["email"] ?? "")"
                 let currentUserRef = usersRef.child(modifiedEmail2!) // Use modified email as the key
-                currentUserRef.updateChildValues(["protecting": email, "UserType": "protecting", "protector": "noone"])
+                currentUserRef.updateChildValues([
+                    "protectingEmail": email,
+                    "protectingName" :  "\(protectorData["name"] ?? "")",
+                    "UserType": "protecting",
+                    "protector": "noone"])
                 
                 // Update the protector's information
                 let protectorRef = usersRef.child(modifiedEmail)
-                protectorRef.updateChildValues(["protector": "\(currentUser.profile?.email ?? "")", "UserType": "protected"])
+                protectorRef.updateChildValues([
+                    "protectorEmail": "\(currentUser.profile?.email ?? "")",
+                    "UserType": "protected",
+                    "protectorName": "\(currentUser.profile?.givenName ?? "")\(currentUser.profile?.familyName ?? "")"])
                 
                 print("Protector information updated successfully")
             } else {
@@ -212,3 +270,4 @@ class AuthenticationViewModel: ObservableObject {
     }
     
 }
+
