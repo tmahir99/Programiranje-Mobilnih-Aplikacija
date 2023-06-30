@@ -19,8 +19,9 @@ class AuthenticationViewModel: ObservableObject {
     @Published var userType: UserType = .none
     @Published var protectorName: String = ""
     @Published var protectorID: String = ""
-    @Published var alarmStatus: Int = 0
+    @Published var alarmStatus: String = "0"
     @Published var protectingEmail : String = ""
+    @Published var protectingName : String = ""
     
     
     enum SignInState {
@@ -74,11 +75,12 @@ class AuthenticationViewModel: ObservableObject {
                         if userType == "protecting" {
                             self?.userType = .protecting
                             self?.protectingEmail = "\(userDataDict["protectingEmail"] ?? "")"
+                            self?.protectingName = "\(userDataDict["protectingName"] ?? "")"
                         } else if userType == "protected" {
                             self?.userType = .protected
-                            self?.protectorName = "\(userDataDict["protector"] ?? "")"
+                            self?.protectorName = "\(userDataDict["protectorName"] ?? "")"
                             self?.protectorID = "\(userDataDict["id"] ?? "")"
-                            self?.alarmStatus = userDataDict["alarm"] as? Int ?? 0
+                            self?.alarmStatus = "\(userDataDict["alarm"] ?? "0")"
                         }
                     }
                 }
@@ -246,6 +248,29 @@ class AuthenticationViewModel: ObservableObject {
         }
     }
 
+    func saveProtectorAlarm(alarm: Date) {
+        let modifiedEmail = protectingEmail.replacingOccurrences(of: ".", with: "=")
+        
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "HH:mm"
+        let alarmTime = dateFormatter.string(from: alarm)
+        
+        let database = Database.database().reference()
+        let usersRef = database.child("users")
+        
+        usersRef.observeSingleEvent(of: .value) { snapshot in
+            if snapshot.hasChild(modifiedEmail) {
+                // Update the protector's information
+                let protectorRef = usersRef.child(modifiedEmail)
+                protectorRef.updateChildValues([
+                    "alarm": "\(alarmTime)"])
+                
+                print("Protector information updated successfully")
+            } else {
+                print("Protector email not found in the database")
+            }
+        }
+    }
 
 
 

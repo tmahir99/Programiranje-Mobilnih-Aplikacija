@@ -107,7 +107,9 @@ struct HomeView: View {
     @EnvironmentObject var viewModel: AuthenticationViewModel
     private let user = GIDSignIn.sharedInstance.currentUser
     @State private var protectorEmail = ""
+    @State private var setAlarm = ""
     @State private var protectorId = ""
+    @State private var currentDate = Date()
     
     var body: some View {
         NavigationView {
@@ -137,50 +139,92 @@ struct HomeView: View {
                 Spacer()
                 
                 if viewModel.userType == .protecting {
-                    Text("You are currently protecting")
-                        .font(.headline)
-                        .padding()
-                                    VStack(alignment: .leading) {
-                                        Text("Protector Email")
-                                            .font(.headline)
-                    
-                                        TextField("Enter protector's email", text: $protectorEmail)
-                                            .textFieldStyle(RoundedBorderTextFieldStyle())
-                                            .autocapitalization(.none)
-                    
-                                        Text("Protector ID")
-                                            .font(.headline)
-                    
-                                        TextField("Enter protector's ID", text: $protectorId)
-                                            .textFieldStyle(RoundedBorderTextFieldStyle())
-                                            .autocapitalization(.none)
-                                    }
-                    
-                    Spacer()
-                    
-                    Button(action: {
-                        viewModel.saveProtectorId(email: protectorEmail, protectorId: protectorId, currentUser: user!)
-                    }) {
-                        Text("Save Protector ID")
-                            .foregroundColor(.white)
-                            .padding()
-                            .frame(maxWidth: .infinity)
-                            .background(Color(.systemIndigo))
-                            .cornerRadius(12)
-                            .padding()
-                    }
-                    
+                    if viewModel.protectingEmail == "noone"{
+                        VStack(alignment: .leading) {
+                            Text("Protector Email")
+                                .font(.headline)
+        
+                            TextField("Enter protector's email", text: $protectorEmail)
+                                .textFieldStyle(RoundedBorderTextFieldStyle())
+                                .autocapitalization(.none)
+        
+                            Text("Protector ID")
+                                .font(.headline)
+        
+                            TextField("Enter protector's ID", text: $protectorId)
+                                .textFieldStyle(RoundedBorderTextFieldStyle())
+                                .autocapitalization(.none)
+                            
+                            Spacer()
+                            
+                            Button(action: {
+                                viewModel.saveProtectorId(email: protectorEmail, protectorId: protectorId, currentUser: user!)
+                            }) {
+                                Text("Save Protector ID")
+                                    .foregroundColor(.white)
                                     .padding()
+                                    .frame(maxWidth: .infinity)
+                                    .background(Color(.systemIndigo))
+                                    .cornerRadius(12)
+                                    .padding()
+                            }
+                            
+                                    .padding()
+                        }
+                    }
+                    else{
+                        Text("You are currently protecting: \(viewModel.protectingName)")
+                            .font(.headline)
+                            .padding()
+                        Text("You are currently protecting: \(viewModel.protectingEmail)")
+                            .font(.headline)
+                            .padding()
+                        DatePicker("", selection: $currentDate, displayedComponents: .hourAndMinute)
+                            .labelsHidden()
+                        Spacer()
+                        
+                        Button(action: {
+                            viewModel.saveProtectorAlarm(alarm: currentDate)
+                        }) {
+                            Text("Adjust the Alarm")
+                                .foregroundColor(.white)
+                                .padding()
+                                .frame(maxWidth: .infinity)
+                                .background(Color(.systemIndigo))
+                                .cornerRadius(12)
+                                .padding()
+                        }
+
+                        
+                    }
+
                 } else if viewModel.userType == .protected {
                     VStack(alignment: .leading) {
-                        Text("Protector: \(viewModel.protectorName)")
-                            .font(.headline)
                         
-                        Text("Protector ID: \(viewModel.protectorID)")
-                            .font(.headline)
+                        if viewModel.protectorName == "noone"{
+                            Text("Please give this code to your protector: \(viewModel.protectorID)")
+                                .font(.headline)
+                        }
+                        else{
+                            
+                            Text("You are protrcted by : \(viewModel.protectorName)")
+                                .font(.headline)
+                            
+//                            Text("Your unique ID : \(viewModel.protectorID)")
+//                                .font(.headline)
+//
+                        }
+
                         
-                        Text("Alarm: \(viewModel.alarmStatus)")
-                            .font(.headline)
+                        if viewModel.alarmStatus == "0"{
+                            
+                            Text("There is no alarm set for you!")
+                                .font(.headline)
+                        }
+                        else{
+                            Text("Alarm for late night is set to : \(viewModel.alarmStatus)")
+                                .font(.headline)
+                        }
                     }
                     .padding()
                 } else {
