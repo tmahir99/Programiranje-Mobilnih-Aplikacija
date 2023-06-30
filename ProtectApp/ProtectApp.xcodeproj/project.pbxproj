@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0794B4CB2A4ECDBF00244ACB /* LocationMapViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0794B4CA2A4ECDBF00244ACB /* LocationMapViewController.swift */; };
 		07D0CEFC2A422295004641F6 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 07D0CEFB2A422295004641F6 /* GoogleService-Info.plist */; };
 		52751C46294E158600371B11 /* LocationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52751C45294E158600371B11 /* LocationManager.swift */; };
 		52751C50294E18DE00371B11 /* MapWithUserLocation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52751C4F294E18DE00371B11 /* MapWithUserLocation.swift */; };
@@ -56,6 +57,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		0794B4CA2A4ECDBF00244ACB /* LocationMapViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationMapViewController.swift; sourceTree = "<group>"; };
 		07D0CEFB2A422295004641F6 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		52751C45294E158600371B11 /* LocationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationManager.swift; sourceTree = "<group>"; };
 		52751C4F294E18DE00371B11 /* MapWithUserLocation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapWithUserLocation.swift; sourceTree = "<group>"; };
@@ -151,6 +153,7 @@
 				52829B1E2956092F00ACE325 /* AuthenticationViewModel.swift */,
 				52829B2029560B5900ACE325 /* LoginView.swift */,
 				52829B2229560B9A00ACE325 /* HomeView.swift */,
+				0794B4CA2A4ECDBF00244ACB /* LocationMapViewController.swift */,
 			);
 			path = ProtectApp;
 			sourceTree = "<group>";
@@ -335,6 +338,7 @@
 				52829B1B2955FEA200ACE325 /* UserModel.swift in Sources */,
 				52751C46294E158600371B11 /* LocationManager.swift in Sources */,
 				52829B2329560B9A00ACE325 /* HomeView.swift in Sources */,
+				0794B4CB2A4ECDBF00244ACB /* LocationMapViewController.swift in Sources */,
 				52829B2129560B5900ACE325 /* LoginView.swift in Sources */,
 				5279F3F12932616800B05322 /* ContentView.swift in Sources */,
 				52829B1F2956092F00ACE325 /* AuthenticationViewModel.swift in Sources */,

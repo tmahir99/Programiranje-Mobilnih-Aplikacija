@@ -1,4 +1,5 @@
 import Firebase
+import CoreLocation
 import FirebaseDatabase
 import GoogleSignIn
 import SwiftUI
@@ -22,6 +23,7 @@ class AuthenticationViewModel: ObservableObject {
     @Published var alarmStatus: String = "0"
     @Published var protectingEmail : String = ""
     @Published var protectingName : String = ""
+    @Published var locations: [Location] = []
     
     
     enum SignInState {
@@ -71,22 +73,84 @@ class AuthenticationViewModel: ObservableObject {
         userRef.observeSingleEvent(of: .value) { [weak self] snapshot in
             if snapshot.exists() {
                 if let userDataDict = snapshot.value as? [String: Any] {
+                    print("User Data Dictionary: \(userDataDict)")
                     if let userType = userDataDict["UserType"] as? String {
                         if userType == "protecting" {
                             self?.userType = .protecting
                             self?.protectingEmail = "\(userDataDict["protectingEmail"] ?? "")"
                             self?.protectingName = "\(userDataDict["protectingName"] ?? "")"
+                            
+                            if let protectorId = userDataDict["protectingEmail"] as? String {
+                                self?.fetchProtectorLocations(protectorId: protectorId)
+                            }
                         } else if userType == "protected" {
                             self?.userType = .protected
                             self?.protectorName = "\(userDataDict["protectorName"] ?? "")"
                             self?.protectorID = "\(userDataDict["id"] ?? "")"
                             self?.alarmStatus = "\(userDataDict["alarm"] ?? "0")"
+                            self?.locations = []
+                            
+                            if let locationString = userDataDict["locations"] as? String {
+                                print("Location String: \(locationString)")
+                                
+                                if let data = locationString.data(using: .utf8),
+                                   let locationsArray = try? JSONDecoder().decode([Location].self, from: data) {
+                                    self?.locations = locationsArray
+                                    
+                                    for location in locationsArray {
+                                        print("Coordinate: \(location.coordinate.latitude), \(location.coordinate.longitude)")
+                                        print("Timestamp: \(location.timestamp)")
+                                        print("-----------------------")
+                                    }
+                                } else {
+                                    print("Error decoding locations data")
+                                }
+                            } else {
+                                print("No locations data found")
+                            }
                         }
                     }
                 }
+            } else {
+                print("Snapshot does not exist")
             }
         }
     }
+
+    func fetchProtectorLocations(protectorId: String) {
+        let ref = Database.database(url: "https://protectapp-2023-2-default-rtdb.firebaseio.com").reference()
+        let userRef = ref.child("users").child(protectorId.replacingOccurrences(of: ".", with: "="))
+        
+        userRef.observeSingleEvent(of: .value) { [weak self] snapshot in
+            if snapshot.exists() {
+                if let userDataDict = snapshot.value as? [String: Any],
+                   let locationString = userDataDict["locations"] as? String {
+                    print("Protector Location String: \(locationString)")
+                    
+                    if let data = locationString.data(using: .utf8),
+                       let locationsArray = try? JSONDecoder().decode([Location].self, from: data) {
+                        self?.locations = locationsArray
+                        
+                        for location in locationsArray {
+                            print("Coordinate: \(location.coordinate.latitude), \(location.coordinate.longitude)")
+                            print("Timestamp: \(location.timestamp)")
+                            print("-----------------------")
+                        }
+                    } else {
+                        print("Error decoding protector locations data")
+                    }
+                } else {
+                    print("No protector locations data found")
+                }
+            } else {
+                print("Protector snapshot does not exist")
+            }
+        }
+    }
+
+
+
+
     
     func chooseProtector() {
         userType = .protecting
@@ -294,5 +358,46 @@ class AuthenticationViewModel: ObservableObject {
         return fullName
     }
     
+}
+class Location: Codable {
+    var coordinate: CLLocationCoordinate2D
+    var timestamp: Date
+
+    init(coordinate: CLLocationCoordinate2D, timestamp: Date) {
+        self.coordinate = coordinate
+        self.timestamp = timestamp
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case coordinate, timestamp
+    }
+
+    required init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let coordinateWrapper = try container.decode(Coordinate.self, forKey: .coordinate)
+        coordinate = coordinateWrapper.coordinate
+        timestamp = try container.decode(Date.self, forKey: .timestamp)
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        let coordinateWrapper = Coordinate(coordinate: coordinate)
+        try container.encode(coordinateWrapper, forKey: .coordinate)
+        try container.encode(timestamp, forKey: .timestamp)
+    }
+
+    private struct Coordinate: Codable {
+        let latitude: CLLocationDegrees
+        let longitude: CLLocationDegrees
+
+        var coordinate: CLLocationCoordinate2D {
+            return CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
+        }
+
+        init(coordinate: CLLocationCoordinate2D) {
+            latitude = coordinate.latitude
+            longitude = coordinate.longitude
+        }
+    }
 }
 

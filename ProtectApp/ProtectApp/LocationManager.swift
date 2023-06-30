@@ -23,7 +23,7 @@ extension LocationManager: CLLocationManagerDelegate {
 
         DispatchQueue.main.async {
             self.location = location
-            print("Location", location)
+//            print("Location", location)
         }
     }
 }
