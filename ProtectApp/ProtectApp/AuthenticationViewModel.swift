@@ -127,6 +127,8 @@ class AuthenticationViewModel: ObservableObject {
 
         usersRef.child(protectorEmailKey).child("locations").observeSingleEvent(of: .value) { [weak self] snapshot in
             if snapshot.exists(), let locationsDict = snapshot.value as? [String: Any] {
+                var fetchedLocations: [Location] = []
+
                 for (_, locationData) in locationsDict {
                     if let locationDict = locationData as? [String: Any],
                        let latitude = locationDict["latitude"] as? Double,
@@ -135,19 +137,24 @@ class AuthenticationViewModel: ObservableObject {
                        let timestamp = dateFormatter.date(from: timestampString) {
 
                         let location = Location(coordinate: CLLocationCoordinate2D(latitude: latitude, longitude: longitude), timestamp: timestamp)
-                        self?.locations = []
-                        self?.locations.append(location)
+                        fetchedLocations.append(location)
 
                         print("Coordinate: \(location.coordinate.latitude), \(location.coordinate.longitude)")
                         print("Timestamp: \(location.timestamp)")
                         print("-----------------------")
                     }
                 }
+
+                // Update the locations array
+                DispatchQueue.main.async {
+                    self?.locations = fetchedLocations
+                }
             } else {
                 print("No protector locations data found")
             }
         }
     }
+
 
 
 

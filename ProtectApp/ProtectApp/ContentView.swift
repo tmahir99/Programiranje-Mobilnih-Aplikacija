@@ -6,28 +6,36 @@
 //
 import SwiftUI
 struct ContentView: View {
+    @ObservedObject var authViewModel: AuthenticationViewModel
     @EnvironmentObject var viewModel: AuthenticationViewModel
-    var body: some View{
-        
-            switch viewModel.state {
-            case .signedIn:TabView {
+    @StateObject private var locationManager = LocationManager()
+    @State private var selectedLocation: Location?
+    
+    var body: some View {
+        switch viewModel.state {
+        case .signedIn:
+            TabView {
                 HomeView()
-                    .tabItem{
+                    .tabItem {
                         Image(systemName: "person.fill").renderingMode(.original)
                         Text("Profile")
                     }
-                MapWithUserLocation()
-                    .tabItem{
-                        Image(systemName: "mappin").renderingMode(.original)
-                        Text("Location")
-                    }
-                LocationMapView()
+                MapWithUserLocation(locationManager: locationManager, selectedLocation: $selectedLocation)
                     .tabItem {
                         Image(systemName: "mappin").renderingMode(.original)
                         Text("Location")
                     }
-            }//HomeView()
-            case .signedOut: LoginView()
+                LocationMapView(locations: authViewModel.locations)
+                    .tabItem {
+                        Image(systemName: "mappin").renderingMode(.original)
+                        Text("Location")
+                    }
             }
+        case .signedOut:
+            LoginView()
+        }
     }
 }
+
+
+

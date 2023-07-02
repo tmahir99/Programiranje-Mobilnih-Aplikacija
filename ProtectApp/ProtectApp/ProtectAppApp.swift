@@ -14,18 +14,19 @@ import GoogleSignIn
 @main
 struct ProtectApp: App {
     @StateObject var viewModel = AuthenticationViewModel()
-   
+
     init() {
-      setupAuthentication()
+        setupAuthentication()
     }
 
     var body: some Scene {
-      WindowGroup {
-        ContentView()
-          .environmentObject(viewModel)
-      }
+        WindowGroup {
+            ContentView(authViewModel: viewModel) // Pass authViewModel here
+                .environmentObject(viewModel)
+        }
     }
-  }
+}
+
 
   extension ProtectApp {
     private func setupAuthentication() {

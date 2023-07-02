@@ -8,8 +8,8 @@
 import SwiftUI
 import MapKit
 struct MapWithUserLocation: View {
-    
-    @StateObject private var locationManager = LocationManager()
+    @ObservedObject var locationManager: LocationManager
+    @Binding var selectedLocation: Location?
     
     var region: Binding<MKCoordinateRegion>? {
         guard let location = locationManager.location else {
@@ -25,7 +25,7 @@ struct MapWithUserLocation: View {
         if let region = region {
             Map(coordinateRegion: region, interactionModes: .all, showsUserLocation: true, userTrackingMode: .constant(.follow))
                 .ignoresSafeArea()
-            
         }
     }
 }
+
