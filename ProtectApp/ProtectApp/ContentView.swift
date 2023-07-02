@@ -21,11 +21,13 @@ struct ContentView: View {
                         Image(systemName: "mappin").renderingMode(.original)
                         Text("Location")
                     }
+                LocationMapView()
+                    .tabItem {
+                        Image(systemName: "mappin").renderingMode(.original)
+                        Text("Location")
+                    }
             }//HomeView()
             case .signedOut: LoginView()
             }
-        
-        
-
     }
 }

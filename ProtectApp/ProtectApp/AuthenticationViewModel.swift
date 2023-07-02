@@ -80,8 +80,8 @@ class AuthenticationViewModel: ObservableObject {
                             self?.protectingEmail = "\(userDataDict["protectingEmail"] ?? "")"
                             self?.protectingName = "\(userDataDict["protectingName"] ?? "")"
                             
-                            if let protectorId = userDataDict["protectingEmail"] as? String {
-                                self?.fetchProtectorLocations(protectorId: protectorId)
+                            if let protectorEmail = userDataDict["protectingEmail"] as? String {
+                                self?.fetchProtectorLocations(protectorEmail: protectorEmail)
                             }
                         } else if userType == "protected" {
                             self?.userType = .protected
@@ -117,36 +117,46 @@ class AuthenticationViewModel: ObservableObject {
         }
     }
 
-    func fetchProtectorLocations(protectorId: String) {
+
+    func fetchProtectorLocations(protectorEmail: String) {
         let ref = Database.database(url: "https://protectapp-2023-2-default-rtdb.firebaseio.com").reference()
-        let userRef = ref.child("users").child(protectorId.replacingOccurrences(of: ".", with: "="))
-        
-        userRef.observeSingleEvent(of: .value) { [weak self] snapshot in
-            if snapshot.exists() {
-                if let userDataDict = snapshot.value as? [String: Any],
-                   let locationString = userDataDict["locations"] as? String {
-                    print("Protector Location String: \(locationString)")
-                    
-                    if let data = locationString.data(using: .utf8),
-                       let locationsArray = try? JSONDecoder().decode([Location].self, from: data) {
-                        self?.locations = locationsArray
-                        
-                        for location in locationsArray {
-                            print("Coordinate: \(location.coordinate.latitude), \(location.coordinate.longitude)")
-                            print("Timestamp: \(location.timestamp)")
-                            print("-----------------------")
-                        }
-                    } else {
-                        print("Error decoding protector locations data")
+        let usersRef = ref.child("users")
+        let protectorEmailKey = protectorEmail.replacingOccurrences(of: ".", with: "=")
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "MM/dd/yy, h:mm a"
+
+        usersRef.child(protectorEmailKey).child("locations").observeSingleEvent(of: .value) { [weak self] snapshot in
+            if snapshot.exists(), let locationsDict = snapshot.value as? [String: Any] {
+                for (_, locationData) in locationsDict {
+                    if let locationDict = locationData as? [String: Any],
+                       let latitude = locationDict["latitude"] as? Double,
+                       let longitude = locationDict["longitude"] as? Double,
+                       let timestampString = locationDict["timestamp"] as? String,
+                       let timestamp = dateFormatter.date(from: timestampString) {
+
+                        let location = Location(coordinate: CLLocationCoordinate2D(latitude: latitude, longitude: longitude), timestamp: timestamp)
+                        self?.locations = []
+                        self?.locations.append(location)
+
+                        print("Coordinate: \(location.coordinate.latitude), \(location.coordinate.longitude)")
+                        print("Timestamp: \(location.timestamp)")
+                        print("-----------------------")
                     }
-                } else {
-                    print("No protector locations data found")
                 }
             } else {
-                print("Protector snapshot does not exist")
+                print("No protector locations data found")
             }
         }
     }
+
+
+
+
+
+
+
+
+
 
 
 
@@ -359,7 +369,8 @@ class AuthenticationViewModel: ObservableObject {
     }
     
 }
-class Location: Codable {
+class Location: Identifiable, Codable , Equatable{
+    var id = UUID()
     var coordinate: CLLocationCoordinate2D
     var timestamp: Date
 
@@ -399,5 +410,11 @@ class Location: Codable {
             longitude = coordinate.longitude
         }
     }
+    static func == (lhs: Location, rhs: Location) -> Bool {
+        return lhs.coordinate.latitude == rhs.coordinate.latitude &&
+               lhs.coordinate.longitude == rhs.coordinate.longitude &&
+               lhs.timestamp == rhs.timestamp
+    }
 }
+
 
