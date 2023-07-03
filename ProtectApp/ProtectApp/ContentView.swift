@@ -5,12 +5,16 @@
 //  Created by Mahir Tahirovic on 26.11.22..
 //
 import SwiftUI
+import MapKit
+
 struct ContentView: View {
     @ObservedObject var authViewModel: AuthenticationViewModel
     @EnvironmentObject var viewModel: AuthenticationViewModel
     @StateObject private var locationManager = LocationManager()
     @State private var selectedLocation: Location?
-    
+
+    @State private var coordinateRegion = MKCoordinateRegion(center: CLLocationCoordinate2D(latitude: 37.330, longitude: -122.028), span: MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05))
+
     var body: some View {
         switch viewModel.state {
         case .signedIn:
@@ -25,7 +29,7 @@ struct ContentView: View {
                         Image(systemName: "mappin").renderingMode(.original)
                         Text("Location")
                     }
-                LocationMapView(locations: authViewModel.locations)
+                LocationMapView(coordinateRegion: $coordinateRegion, viewModel: authViewModel,locations: authViewModel.locations)
                     .tabItem {
                         Image(systemName: "mappin").renderingMode(.original)
                         Text("Location")
@@ -36,6 +40,4 @@ struct ContentView: View {
         }
     }
 }
-
-
 
