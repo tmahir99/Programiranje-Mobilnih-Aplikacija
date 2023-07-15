@@ -1,9 +1,3 @@
-//
-//  ContentView.swift
-//  ProtectApp
-//
-//  Created by Mahir Tahirovic on 26.11.22..
-//
 import SwiftUI
 import MapKit
 
@@ -12,6 +6,7 @@ struct ContentView: View {
     @EnvironmentObject var viewModel: AuthenticationViewModel
     @StateObject private var locationManager = LocationManager()
     @State private var selectedLocation: Location?
+    
 
     @State private var coordinateRegion = MKCoordinateRegion(center: CLLocationCoordinate2D(latitude: 37.330, longitude: -122.028), span: MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05))
 
@@ -27,17 +22,21 @@ struct ContentView: View {
                 MapWithUserLocation(locationManager: locationManager, selectedLocation: $selectedLocation)
                     .tabItem {
                         Image(systemName: "mappin").renderingMode(.original)
-                        Text("Location")
+                        Text("Me")
                     }
-                LocationMapView(coordinateRegion: $coordinateRegion, viewModel: authViewModel,locations: authViewModel.locations)
-                    .tabItem {
-                        Image(systemName: "mappin").renderingMode(.original)
-                        Text("Location")
-                    }
+                if viewModel.userType == .protecting {
+                    LocationMapView(coordinateRegion: $coordinateRegion, viewModel: authViewModel, locations: authViewModel.locations)
+                        .tabItem {
+                            Image(systemName: "mappin").renderingMode(.original)
+                            Text("\(viewModel.protectingName)")
+                        }
+                        .alert(isPresented: $locationManager.showAlert) {
+                            Alert(title: Text("Protect App"), message: Text(locationManager.alertMessage), dismissButton: .default(Text("OK")))
+                        }
+                }
             }
         case .signedOut:
             LoginView()
         }
     }
 }
-

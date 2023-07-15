@@ -28,7 +28,7 @@ struct LoginView: View {
         .foregroundColor(Color(red: 0.0196078431372549, green: 0.11372549019607843, blue: 0.25098039215686274))
         .multilineTextAlignment(.center)
 
-      Text("Protecting was never izijer")
+      Text("Protecting has never been easier")
             .fontWeight(.bold)
         .multilineTextAlignment(.center)
         .padding()

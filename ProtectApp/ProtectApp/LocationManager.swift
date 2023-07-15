@@ -2,10 +2,13 @@ import Foundation
 import CoreLocation
 import MapKit
 import SwiftUI
+import UserNotifications
 
 final class LocationManager: NSObject, ObservableObject {
     @Published var location: CLLocation?
     private var locationManager = CLLocationManager()
+    @Published var showAlert = false
+    @Published var alertMessage = ""
 
     override init() {
         super.init()
@@ -14,7 +17,65 @@ final class LocationManager: NSObject, ObservableObject {
         locationManager.requestWhenInUseAuthorization()
         locationManager.startUpdatingLocation()
         locationManager.delegate = self
+        
+        // Request permission for notifications
+        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { granted, error in
+            if let error = error {
+                print("Error requesting notification permission: \(error)")
+            } else if granted {
+                //print("Notification permission granted")
+            } else {
+                //print("Notification permission denied")
+            }
+        }
     }
+    
+    private func sendNotification(message: String) {
+        let content = UNMutableNotificationContent()
+        content.title = "Protect App"
+        content.body = message
+        content.sound = UNNotificationSound.default
+        
+        let request = UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: nil)
+        
+        UNUserNotificationCenter.current().add(request) { error in
+            if let error = error {
+                print("Error sending notification: \(error)")
+            }
+        }
+    }
+    
+    func checkAlarmTime(currentTime: String, alarmStatus: String) {
+        print("\(currentTime) and  \(alarmStatus)")
+        if alarmStatus == currentTime {
+            alertMessage = "Time to go home"
+            showAlert = true
+            print("\(currentTime) and  \(alarmStatus)")
+        }
+    }
+
+    func checkDistanceFromProtectedUser(location: CLLocation?) {
+        
+        guard let currentLocation = location else { return }
+        
+        let viewModel = AuthenticationViewModel()
+        if viewModel.userType == .protecting, let protectedUserLocation = viewModel.locations.last?.coordinate {
+            let currentCoordinate = CLLocationCoordinate2D(latitude: currentLocation.coordinate.latitude, longitude: currentLocation.coordinate.longitude)
+            let protectedUserCoordinate = CLLocationCoordinate2D(latitude: protectedUserLocation.latitude, longitude: protectedUserLocation.longitude)
+            
+            let currentLocation = CLLocation(latitude: currentCoordinate.latitude, longitude: currentCoordinate.longitude)
+            let protectedUserLocation = CLLocation(latitude: protectedUserCoordinate.latitude, longitude: protectedUserCoordinate.longitude)
+            
+            let distance = currentLocation.distance(from: protectedUserLocation)
+            print("\(distance)")
+            if distance > 10000 {
+                alertMessage = "The user you are protecting is more than 10km away"
+                showAlert = true
+            }
+            print("\(distance)")
+        }
+    }
+
 }
 
 extension LocationManager: CLLocationManagerDelegate {
@@ -23,8 +84,20 @@ extension LocationManager: CLLocationManagerDelegate {
 
         DispatchQueue.main.async {
             self.location = location
-//            print("Location", location)
+            self.checkDistanceFromProtectedUser(location: location)
+            let viewModel = AuthenticationViewModel()
+            if viewModel.userType == .protected {
+                let currentTime = self.getCurrentTime()
+                self.checkAlarmTime(currentTime: currentTime, alarmStatus: viewModel.alarmStatus)
+            }
         }
+    }
+    
+    private func getCurrentTime() -> String {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "HH:mm"
+        let currentTime = dateFormatter.string(from: Date())
+        return currentTime
     }
 }
 

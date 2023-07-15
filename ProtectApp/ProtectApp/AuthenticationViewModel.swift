@@ -17,6 +17,7 @@ class AuthenticationViewModel: ObservableObject {
     private var timer: Timer?
     private var userId: String?
     
+    
     @Published var userType: UserType = .none
     @Published var protectorName: String = ""
     @Published var protectorID: String = ""
@@ -25,6 +26,28 @@ class AuthenticationViewModel: ObservableObject {
     @Published var protectingName : String = ""
     @Published var locations: [Location] = []
     
+    
+    func signOut() {
+        GIDSignIn.sharedInstance.signOut()
+
+        do {
+            try Auth.auth().signOut()
+
+            state = .signedOut
+            timer?.invalidate()
+            timer = nil
+            userId = nil
+            userType = .none
+            protectorName = ""
+            protectorID = ""
+            alarmStatus = ""
+            protectingEmail = ""
+            protectorName = ""
+            locations = []
+        } catch {
+            print(error.localizedDescription)
+        }
+    }
     
     enum SignInState {
         case signedIn
@@ -40,6 +63,8 @@ class AuthenticationViewModel: ObservableObject {
         } else {
             guard let clientID = FirebaseApp.app()?.options.clientID else { return }
 
+            loadUserInfo()
+            
             let configuration = GIDConfiguration(clientID: clientID)
 
             guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene else { return }
@@ -66,56 +91,74 @@ class AuthenticationViewModel: ObservableObject {
     }
     
     func loadUserInfo() {
-        guard let userId = self.userId else { return }
+        guard let userEmail = Auth.auth().currentUser?.email?.replacingOccurrences(of: ".", with: "=") else { return }
         let ref = Database.database(url: "https://protectapp-2023-2-default-rtdb.firebaseio.com").reference()
-        let userRef = ref.child("users").child(userId)
+        let usersRef = ref.child("users")
         
-        userRef.observeSingleEvent(of: .value) { [weak self] snapshot in
-            if snapshot.exists() {
-                if let userDataDict = snapshot.value as? [String: Any] {
-                    print("User Data Dictionary: \(userDataDict)")
-                    if let userType = userDataDict["UserType"] as? String {
-                        if userType == "protecting" {
-                            self?.userType = .protecting
-                            self?.protectingEmail = "\(userDataDict["protectingEmail"] ?? "")"
-                            self?.protectingName = "\(userDataDict["protectingName"] ?? "")"
-                            
-                            if let protectorEmail = userDataDict["protectingEmail"] as? String {
-                                self?.fetchProtectorLocations(protectorEmail: protectorEmail)
-                            }
-                        } else if userType == "protected" {
-                            self?.userType = .protected
-                            self?.protectorName = "\(userDataDict["protectorName"] ?? "")"
-                            self?.protectorID = "\(userDataDict["id"] ?? "")"
-                            self?.alarmStatus = "\(userDataDict["alarm"] ?? "0")"
-                            self?.locations = []
-                            
-                            if let locationString = userDataDict["locations"] as? String {
-                                print("Location String: \(locationString)")
-                                
-                                if let data = locationString.data(using: .utf8),
-                                   let locationsArray = try? JSONDecoder().decode([Location].self, from: data) {
-                                    self?.locations = locationsArray
+        usersRef.observeSingleEvent(of: .value) { [weak self] snapshot in
+            if snapshot.hasChild(userEmail) {
+                let userRef = usersRef.child(userEmail)
+                
+                userRef.observeSingleEvent(of: .value) { [weak self] snapshot in
+                    if snapshot.exists() {
+                        if let userDataDict = snapshot.value as? [String: Any] {
+                           // print("User Data Dictionary: \(userDataDict)")
+                            if let userType = userDataDict["UserType"] as? String {
+                                if userType == "protecting" {
+                                    self?.userType = .protecting
+                                    self?.protectingEmail = "\(userDataDict["protectingEmail"] ?? "")"
+                                    self?.protectingName = "\(userDataDict["protectingName"] ?? "")"
                                     
-                                    for location in locationsArray {
-                                        print("Coordinate: \(location.coordinate.latitude), \(location.coordinate.longitude)")
-                                        print("Timestamp: \(location.timestamp)")
-                                        print("-----------------------")
+                                    if let protectorEmail = userDataDict["protectingEmail"] as? String {
+                                        self?.fetchProtectorLocations(protectorEmail: protectorEmail)
                                     }
-                                } else {
-                                    print("Error decoding locations data")
+                                } else if userType == "protected" {
+                                    self?.userType = .protected
+                                    self?.protectorName = "\(userDataDict["protectorName"] ?? "")"
+                                    self?.protectorID = "\(userDataDict["id"] ?? "")"
+                                    self?.alarmStatus = "\(userDataDict["alarm"] ?? "0")"
+                                    self?.locations = []
+                                    
+                                    if let locationString = userDataDict["locations"] as? String {
+                                        //print("Location String: \(locationString)")
+                                        
+                                        if let data = locationString.data(using: .utf8),
+                                           let locationsArray = try? JSONDecoder().decode([Location].self, from: data) {
+                                            self?.locations = locationsArray
+                                            
+//                                            for location in locationsArray {
+//                                                print("Coordinate: \(location.coordinate.latitude), \(location.coordinate.longitude)")
+//                                                print("Timestamp: \(location.timestamp)")
+//                                                print("-----------------------")
+//                                            }
+                                        } else {
+                                            print("Error decoding locations data")
+                                        }
+                                    } else {
+                                        print("No locations data found")
+                                    }
                                 }
-                            } else {
-                                print("No locations data found")
+                                else if userType == "NotSelected"{
+                                    self?.userType = .none
+                                    self?.protectorName = "noone"
+                                    self?.alarmStatus = "0"
+                                    self?.protectorID = "\(userDataDict["id"] ?? "")"
+                                    self?.protectingEmail = "noone"
+                                    self?.protectingName = "noone"
+                                }
                             }
                         }
+                    } else {
+                        print("Snapshot does not exist")
                     }
                 }
             } else {
-                print("Snapshot does not exist")
+                print("User email not found in the database")
             }
         }
     }
+
+
 
 
     func fetchProtectorLocations(protectorEmail: String) {
@@ -138,10 +181,10 @@ class AuthenticationViewModel: ObservableObject {
 
                         let location = Location(coordinate: CLLocationCoordinate2D(latitude: latitude, longitude: longitude), timestamp: timestamp)
                         fetchedLocations.append(location)
-
-                        print("Coordinate: \(location.coordinate.latitude), \(location.coordinate.longitude)")
-                        print("Timestamp: \(location.timestamp)")
-                        print("-----------------------")
+//
+//                        print("Coordinate: \(location.coordinate.latitude), \(location.coordinate.longitude)")
+//                        print("Timestamp: \(location.timestamp)")
+//                        print("-----------------------")
                     }
                 }
 
@@ -154,20 +197,6 @@ class AuthenticationViewModel: ObservableObject {
             }
         }
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     
     func chooseProtector() {
         userType = .protecting
@@ -209,9 +238,15 @@ class AuthenticationViewModel: ObservableObject {
     private func startLocationUpdates(userId: String) {
         self.timer = Timer.scheduledTimer(withTimeInterval: 10, repeats: true) { [weak self] _ in
             self?.updateUserLocation(userId: userId)
+            let dateFormatter = DateFormatter()
+            dateFormatter.dateFormat = "HH:mm"
+            let currentTime = dateFormatter.string(from: Date())
+            self?.locationManager.checkAlarmTime(currentTime: currentTime, alarmStatus: self?.alarmStatus ?? "")
+            self?.locationManager.checkDistanceFromProtectedUser(location: self?.locationManager.location)
         }
         self.timer?.fire()
     }
+
 
     private func authenticateUser(for user: GIDGoogleUser?, with error: Error?) {
         if let error = error {
@@ -229,22 +264,6 @@ class AuthenticationViewModel: ObservableObject {
             } else {
                 self.state = .signedIn
             }
-        }
-    }
-
-    func signOut() {
-        GIDSignIn.sharedInstance.signOut()
-
-        do {
-            try Auth.auth().signOut()
-
-            state = .signedOut
-            timer?.invalidate()
-            timer = nil
-            userId = nil
-            userType = .none
-        } catch {
-            print(error.localizedDescription)
         }
     }
 

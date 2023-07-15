@@ -7,12 +7,14 @@ struct LocationMapView: View {
     var locations: [Location]
 
     @State private var selectedLocation: Location?
+    @State private var isPresentingLocationDetails = false
 
     var body: some View {
         Map(coordinateRegion: $coordinateRegion, annotationItems: locations) { location in
             MapAnnotation(coordinate: location.coordinate) {
                 Button(action: {
                     selectedLocation = location
+                    isPresentingLocationDetails = true
                 }) {
                     Image(systemName: "mappin.circle.fill")
                         .resizable()
@@ -23,7 +25,7 @@ struct LocationMapView: View {
             }
         }
         .sheet(item: $selectedLocation) { location in
-            LocationDetailsView(location: location, viewModel: viewModel)
+            LocationDetailsView(location: location, viewModel: viewModel, isPresentingLocationDetails: $isPresentingLocationDetails)
         }
     }
 }
@@ -31,6 +33,8 @@ struct LocationMapView: View {
 struct LocationDetailsView: View {
     let location: Location
     @ObservedObject var viewModel: AuthenticationViewModel
+    @Binding var isPresentingLocationDetails: Bool
+    @Environment(\.presentationMode) var presentationMode
     
     var body: some View {
         VStack {
@@ -46,10 +50,10 @@ struct LocationDetailsView: View {
             Spacer()
             
             Button("Close") {
-                // Close the sheet
+                isPresentingLocationDetails = false
+                presentationMode.wrappedValue.dismiss()
             }
         }
         .padding()
     }
 }
-
