@@ -10,7 +10,13 @@ struct HomeView: View {
     @State private var protectorId = ""
     @State private var currentDate = Date()
     
+    
+    @State private var IsPresentingDistanceMessage = false
+    @State private var isPresentingAlarmMessage = false
+    
+    
     var body: some View {
+
         NavigationView {
             VStack {
                 HStack {
@@ -172,7 +178,27 @@ struct HomeView: View {
         .onAppear {
             viewModel.loadUserInfo()
         }
+        
+        .onChange(of: viewModel.distanceFromProtectedUser) { distance in
+                    if distance >= 10000 {
+                        IsPresentingDistanceMessage = true
+                    } else {
+                        IsPresentingDistanceMessage = false
+                    }
+                }
+                .sheet(isPresented: $IsPresentingDistanceMessage) {
+                    DistanceMessage(distance: viewModel.distanceFromProtectedUser, viewModel: viewModel, IsPresentingDistanceMessage: $IsPresentingDistanceMessage)
+                }
+        
+                .onChange(of: viewModel.showAlert) { showAlert in
+                    isPresentingAlarmMessage = showAlert
+                }
+                .sheet(isPresented: $isPresentingAlarmMessage) {
+                    AlarmTimeMessage(viewModel: viewModel, IsPresentingDistanceMessage: $isPresentingAlarmMessage)
+                }
+
     }
+    
 }
 
 struct NetworkImage: View {
@@ -190,5 +216,84 @@ struct NetworkImage: View {
                 .resizable()
                 .aspectRatio(contentMode: .fit)
         }
+    }
+}
+
+
+struct DistanceMessage: View {
+    let distance: Double
+    @ObservedObject var viewModel: AuthenticationViewModel
+    @Binding var IsPresentingDistanceMessage: Bool
+    @Environment(\.presentationMode) var presentationMode
+    
+    var body: some View {
+        VStack {
+            Text("The user:")
+                .font(.title)
+                .fontWeight(.bold)
+            Text("\(viewModel.protectingName)")
+                .font(.title)
+                .fontWeight(.bold)
+                .foregroundColor(Color(hue: 1.0, saturation: 0.665, brightness: 0.935))
+            Text("is ")
+                .font(.title)
+                .fontWeight(.bold)
+            Text("\(distance/1000)")
+                .font(.title)
+                .fontWeight(.bold)
+                .foregroundColor(Color(hue: 1.0, saturation: 0.665, brightness: 0.935))
+            Text("KM away from you")
+                .font(.title)
+                .fontWeight(.bold)
+            
+            
+            
+            Text("Please be aware that the user you are protecting is currently to far away from you!")
+                .font(.body)
+                .fontWeight(.bold)
+                .multilineTextAlignment(.center)
+            
+            Spacer()
+            
+            Button("Close") {
+                IsPresentingDistanceMessage = false
+                presentationMode.wrappedValue.dismiss()
+            }
+        }
+        .padding()
+    }
+}
+
+
+struct AlarmTimeMessage: View {
+    @ObservedObject var viewModel: AuthenticationViewModel
+    @Binding var IsPresentingDistanceMessage: Bool
+    @Environment(\.presentationMode) var presentationMode
+    
+    var body: some View {
+        VStack {
+            Text("time to go home, the alarm is set to :")
+                .font(.title)
+                .fontWeight(.bold)
+            Text("\(viewModel.alarmStatus)")
+                .font(.title)
+                .fontWeight(.bold)
+                .foregroundColor(Color(hue: 1.0, saturation: 0.665, brightness: 0.935))
+                
+            
+            Text("Please be aware that it's time to go home!")
+                .font(.body)
+                .fontWeight(.bold)
+                .multilineTextAlignment(.center)
+            
+            
+            Spacer()
+            
+            Button("Close") {
+                IsPresentingDistanceMessage = false
+                presentationMode.wrappedValue.dismiss()
+            }
+        }
+        .padding()
     }
 }

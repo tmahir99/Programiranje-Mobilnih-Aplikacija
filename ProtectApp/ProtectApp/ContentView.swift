@@ -30,9 +30,6 @@ struct ContentView: View {
                             Image(systemName: "mappin").renderingMode(.original)
                             Text("\(viewModel.protectingName)")
                         }
-                        .alert(isPresented: $locationManager.showAlert) {
-                            Alert(title: Text("Protect App"), message: Text(locationManager.alertMessage), dismissButton: .default(Text("OK")))
-                        }
                 }
             }
         case .signedOut:

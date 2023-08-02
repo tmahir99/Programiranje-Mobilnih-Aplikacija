@@ -7,8 +7,7 @@ import UserNotifications
 final class LocationManager: NSObject, ObservableObject {
     @Published var location: CLLocation?
     private var locationManager = CLLocationManager()
-    @Published var showAlert = false
-    @Published var alertMessage = ""
+
 
     override init() {
         super.init()
@@ -45,36 +44,10 @@ final class LocationManager: NSObject, ObservableObject {
         }
     }
     
-    func checkAlarmTime(currentTime: String, alarmStatus: String) {
-        print("\(currentTime) and  \(alarmStatus)")
-        if alarmStatus == currentTime {
-            alertMessage = "Time to go home"
-            showAlert = true
-            print("\(currentTime) and  \(alarmStatus)")
-        }
-    }
 
-    func checkDistanceFromProtectedUser(location: CLLocation?) {
-        
-        guard let currentLocation = location else { return }
-        
-        let viewModel = AuthenticationViewModel()
-        if viewModel.userType == .protecting, let protectedUserLocation = viewModel.locations.last?.coordinate {
-            let currentCoordinate = CLLocationCoordinate2D(latitude: currentLocation.coordinate.latitude, longitude: currentLocation.coordinate.longitude)
-            let protectedUserCoordinate = CLLocationCoordinate2D(latitude: protectedUserLocation.latitude, longitude: protectedUserLocation.longitude)
-            
-            let currentLocation = CLLocation(latitude: currentCoordinate.latitude, longitude: currentCoordinate.longitude)
-            let protectedUserLocation = CLLocation(latitude: protectedUserCoordinate.latitude, longitude: protectedUserCoordinate.longitude)
-            
-            let distance = currentLocation.distance(from: protectedUserLocation)
-            print("\(distance)")
-            if distance > 10000 {
-                alertMessage = "The user you are protecting is more than 10km away"
-                showAlert = true
-            }
-            print("\(distance)")
-        }
-    }
+
+
+
 
 }
 
@@ -84,14 +57,12 @@ extension LocationManager: CLLocationManagerDelegate {
 
         DispatchQueue.main.async {
             self.location = location
-            self.checkDistanceFromProtectedUser(location: location)
             let viewModel = AuthenticationViewModel()
-            if viewModel.userType == .protected {
-                let currentTime = self.getCurrentTime()
-                self.checkAlarmTime(currentTime: currentTime, alarmStatus: viewModel.alarmStatus)
-            }
+            viewModel.checkDistanceFromProtectedUser(location: location, locations: viewModel.locations)
+
         }
     }
+
     
     private func getCurrentTime() -> String {
         let dateFormatter = DateFormatter()

@@ -25,7 +25,12 @@ class AuthenticationViewModel: ObservableObject {
     @Published var protectingEmail : String = ""
     @Published var protectingName : String = ""
     @Published var locations: [Location] = []
+    @Published var locations1: [Location] = []
+    @Published var distanceFromProtectedUser : Double = 0;
     
+    
+    @Published var showAlert = false
+    @Published var alertMessage = ""
     
     func signOut() {
         GIDSignIn.sharedInstance.signOut()
@@ -181,22 +186,20 @@ class AuthenticationViewModel: ObservableObject {
 
                         let location = Location(coordinate: CLLocationCoordinate2D(latitude: latitude, longitude: longitude), timestamp: timestamp)
                         fetchedLocations.append(location)
-//
-//                        print("Coordinate: \(location.coordinate.latitude), \(location.coordinate.longitude)")
-//                        print("Timestamp: \(location.timestamp)")
-//                        print("-----------------------")
                     }
                 }
 
                 // Update the locations array
                 DispatchQueue.main.async {
                     self?.locations = fetchedLocations
+                    //print("\(self?.locations.last) ovde printam kada se tek kao uhvate")
                 }
             } else {
                 print("No protector locations data found")
             }
         }
     }
+
     
     func chooseProtector() {
         userType = .protecting
@@ -238,14 +241,74 @@ class AuthenticationViewModel: ObservableObject {
     private func startLocationUpdates(userId: String) {
         self.timer = Timer.scheduledTimer(withTimeInterval: 10, repeats: true) { [weak self] _ in
             self?.updateUserLocation(userId: userId)
-            let dateFormatter = DateFormatter()
-            dateFormatter.dateFormat = "HH:mm"
-            let currentTime = dateFormatter.string(from: Date())
-            self?.locationManager.checkAlarmTime(currentTime: currentTime, alarmStatus: self?.alarmStatus ?? "")
-            self?.locationManager.checkDistanceFromProtectedUser(location: self?.locationManager.location)
+            if self?.userType == .protected {
+                let dateFormatter = DateFormatter()
+                dateFormatter.dateFormat = "HH:mm"
+                let currentTime = dateFormatter.string(from: Date())
+                self?.checkAlarmTime(currentTime: currentTime, alarmStatus: self?.alarmStatus ?? "")
+            }
+            
+            //let viewModel = AuthenticationViewModel()
+                
+            //print("fakaj me direkt ako znam \(self?.locations.last)")
+            self?.checkDistanceFromProtectedUser(location: self?.locationManager.location, locations: self?.locations ?? [])
         }
         self.timer?.fire()
     }
+
+    func checkDistanceFromProtectedUser(location: CLLocation?, locations: [Location]) {
+        guard let currentLocation = location else { return }
+        let testLocation = locations.last
+        //print("\(userType) and last location latitude: \(testLocation?.coordinate.latitude) and last location longitude: \(testLocation?.coordinate.longitude)")
+        //print("longitude : \(location?.coordinate.longitude) latitude : \(location?.coordinate.latitude) demek njegova lokacija test")
+
+        if userType == .protecting, let protectedUserLocation = locations.last {
+            let currentCoordinate = CLLocationCoordinate2D(latitude: currentLocation.coordinate.latitude, longitude: currentLocation.coordinate.longitude)
+            let protectedUserCoordinate = protectedUserLocation.coordinate
+
+            let currentLocation = CLLocation(latitude: currentCoordinate.latitude, longitude: currentCoordinate.longitude)
+            let protectedUserLocation = CLLocation(latitude: protectedUserCoordinate.latitude, longitude: protectedUserCoordinate.longitude)
+
+            let distance = currentLocation.distance(from: protectedUserLocation)
+            distanceFromProtectedUser = distance
+            print("\(distance/1000) KM away")
+            if distance > 10000 {
+                print("The user you are protecting is more than 10km away")
+            } else {
+                print("The user you are protecting is within 10km")
+            }
+        }
+    }
+    
+    func checkAlarmTime(currentTime: String, alarmStatus: String) {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH:mm" // Assuming the time format is "HH:mm"
+        
+        guard let currentTimeDate = formatter.date(from: currentTime),
+              let alarmTimeDate = formatter.date(from: alarmStatus) else {
+            return // Invalid date format, return early
+        }
+
+        let calendar = Calendar.current
+        let comparison = calendar.compare(currentTimeDate, to: alarmTimeDate, toGranularity: .minute)
+
+        switch comparison {
+        case .orderedSame:
+            // Alarm is now, show alert
+            alertMessage = "Time to go home"
+            showAlert = true
+        case .orderedDescending:
+            // Current time is past the alarm time, show alert if not already shown
+            if !showAlert {
+                alertMessage = "You missed the alarm time to go home"
+                showAlert = true
+            }
+        default:
+            // Alarm is in the future, do nothing
+            break
+        }
+    }
+
 
 
     private func authenticateUser(for user: GIDGoogleUser?, with error: Error?) {
@@ -442,5 +505,6 @@ class Location: Identifiable, Codable , Equatable{
                lhs.timestamp == rhs.timestamp
     }
 }
+
 
 
