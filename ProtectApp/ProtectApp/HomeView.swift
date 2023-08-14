@@ -18,7 +18,8 @@ struct HomeView: View {
     var body: some View {
 
         NavigationView {
-            VStack {
+            VStack(alignment: .center) {
+                Spacer()
                 HStack {
                     NetworkImage(url: user?.profile?.imageURL(withDimension: 200))
                         .aspectRatio(contentMode: .fit)
@@ -28,18 +29,19 @@ struct HomeView: View {
                     VStack(alignment: .leading) {
                         Text(user?.profile?.name ?? "")
                             .font(.headline)
+                            .foregroundColor(Color.white)
                         
                         Text(user?.profile?.email ?? "")
                             .font(.subheadline)
+                            .foregroundColor(Color.white)
                     }
                     
                     Spacer()
                 }
                 .padding()
                 .frame(maxWidth: .infinity)
-                .background(Color(.secondarySystemBackground))
+                .background(Color(red: 0.0196078431372549, green: 0.11372549019607843, blue: 0.25098039215686274))
                 .cornerRadius(12)
-                .padding()
                 
                 Spacer()
                 
@@ -78,27 +80,29 @@ struct HomeView: View {
                         }
                     }
                     else{
-                        Text("You are currently protecting: \(viewModel.protectingName)")
-                            .font(.headline)
-                            .padding()
-                        Text("You are currently protecting: \(viewModel.protectingEmail)")
-                            .font(.headline)
-                            .padding()
-                        DatePicker("", selection: $currentDate, displayedComponents: .hourAndMinute)
-                            .labelsHidden()
+                        Text("You are currently protecting: **\(viewModel.protectingName)** , **\(viewModel.protectingEmail)**")
+                            .multilineTextAlignment(.leading)
                         Spacer()
                         
-                        Button(action: {
-                            viewModel.saveProtectorAlarm(alarm: currentDate)
-                        }) {
-                            Text("Adjust the Alarm")
-                                .foregroundColor(.white)
-                                .padding()
-                                .frame(maxWidth: .infinity)
-                                .background(Color(.systemIndigo))
-                                .cornerRadius(12)
-                                .padding()
-                        }
+                        HStack(spacing: 0) {
+                                DatePicker("", selection: $currentDate, displayedComponents: .hourAndMinute)
+                                    .labelsHidden()
+                                    .frame(width: (UIScreen.main.bounds.width / 3) - 20 )
+                                
+                                Button(action: {
+                                    viewModel.saveProtectorAlarm(alarm: currentDate)
+                                }) {
+                                    Text("Adjust the Alarm")
+                                        .foregroundColor(.white)
+                                        .padding()
+                                        .frame(maxWidth: .infinity)
+                                        .background(Color(.systemIndigo))
+                                        .cornerRadius(12)
+                                }
+                                .frame(width: (2 * UIScreen.main.bounds.width / 3) - 50 )
+                            }
+                            .padding(.horizontal, 20)
+
 
                         
                     }
@@ -167,12 +171,13 @@ struct HomeView: View {
                         .foregroundColor(.white)
                         .padding()
                         .frame(maxWidth: .infinity)
-                        .background(Color(.systemIndigo))
+                        .background(Color(red: 0.0196078431372549, green: 0.11372549019607843, blue: 0.25098039215686274))
                         .cornerRadius(12)
                         .padding()
                 }
             }
-            .navigationTitle("ProtectApp")
+            .padding(/*@START_MENU_TOKEN@*/.horizontal/*@END_MENU_TOKEN@*/, 20)
+            .navigationBarTitle("**ProtectApp**", displayMode: .inline)
         }
         .navigationViewStyle(StackNavigationViewStyle())
         .onAppear {
@@ -228,25 +233,11 @@ struct DistanceMessage: View {
     
     var body: some View {
         VStack {
-            Text("The user:")
+            Text("The user: **\(viewModel.protectingName)** is **\(String(format: "%.1f", distance / 1000))** KM away from you")
                 .font(.title)
-                .fontWeight(.bold)
-            Text("\(viewModel.protectingName)")
-                .font(.title)
-                .fontWeight(.bold)
-                .foregroundColor(Color(hue: 1.0, saturation: 0.665, brightness: 0.935))
-            Text("is ")
-                .font(.title)
-                .fontWeight(.bold)
-            Text("\(distance/1000)")
-                .font(.title)
-                .fontWeight(.bold)
-                .foregroundColor(Color(hue: 1.0, saturation: 0.665, brightness: 0.935))
-            Text("KM away from you")
-                .font(.title)
-                .fontWeight(.bold)
+                .multilineTextAlignment(.center)
             
-            
+            Spacer()
             
             Text("Please be aware that the user you are protecting is currently to far away from you!")
                 .font(.body)

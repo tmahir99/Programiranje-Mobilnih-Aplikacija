@@ -21,7 +21,7 @@ struct ProtectApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView(authViewModel: viewModel) // Pass authViewModel here
+            ContentView(authViewModel: viewModel)
                 .environmentObject(viewModel)
         }
     }

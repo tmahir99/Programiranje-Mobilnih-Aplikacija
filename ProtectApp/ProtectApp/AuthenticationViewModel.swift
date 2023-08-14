@@ -69,7 +69,7 @@ class AuthenticationViewModel: ObservableObject {
             guard let clientID = FirebaseApp.app()?.options.clientID else { return }
 
             loadUserInfo()
-            
+
             let configuration = GIDConfiguration(clientID: clientID)
 
             guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene else { return }
