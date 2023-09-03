@@ -45,8 +45,6 @@ struct LocationDetailsView: View {
             Text("Longitude: \(location.coordinate.longitude)")
             Text("The user: \(viewModel.protectingName) was here at \(location.timestamp)")
             
-            // Add any other details you want to display
-            
             Spacer()
             
             Button("Close") {

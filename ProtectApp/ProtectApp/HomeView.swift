@@ -11,6 +11,11 @@ struct HomeView: View {
     @State private var currentDate = Date()
     
     
+    @State var isShowingSheet = false
+    @State var isShowingSheetButton = false
+
+    @State var isShowingSheetAlarm = false
+    
     @State private var IsPresentingDistanceMessage = false
     @State private var isPresentingAlarmMessage = false
     
@@ -19,7 +24,6 @@ struct HomeView: View {
 
         NavigationView {
             VStack(alignment: .center) {
-                Spacer()
                 HStack {
                     NetworkImage(url: user?.profile?.imageURL(withDimension: 200))
                         .aspectRatio(contentMode: .fit)
@@ -84,24 +88,40 @@ struct HomeView: View {
                             .multilineTextAlignment(.leading)
                         Spacer()
                         
-                        HStack(spacing: 0) {
-                                DatePicker("", selection: $currentDate, displayedComponents: .hourAndMinute)
-                                    .labelsHidden()
-                                    .frame(width: (UIScreen.main.bounds.width / 3) - 20 )
-                                
-                                Button(action: {
-                                    viewModel.saveProtectorAlarm(alarm: currentDate)
-                                }) {
-                                    Text("Adjust the Alarm")
-                                        .foregroundColor(.white)
-                                        .padding()
-                                        .frame(maxWidth: .infinity)
-                                        .background(Color(.systemIndigo))
-                                        .cornerRadius(12)
+                        Button("Set the alarm!") {
+                                    isShowingSheetButton = true
+                                }.foregroundColor(.white)
+                            .padding()
+                            .frame(maxWidth: .infinity)
+                            .background(Color(.systemIndigo))
+                            .cornerRadius(12)
+                            .padding()
+                                .sheet(isPresented: $isShowingSheetButton) {
+                                    ZStack {
+                                        Color(red: 0.86, green: 0.86, blue: 0.86)
+                                        
+                                        
+                                        HStack(spacing: 0) {
+                                                DatePicker("", selection: $currentDate, displayedComponents: .hourAndMinute)
+                                                    .labelsHidden()
+                                                    .frame(width: (UIScreen.main.bounds.width / 3) - 20 )
+                                                
+                                                Button(action: {
+                                                    viewModel.saveProtectorAlarm(alarm: currentDate)
+                                                }) {
+                                                    Text("Adjust the Alarm")
+                                                        .foregroundColor(.white)
+                                                        .padding()
+                                                        .frame(maxWidth: .infinity)
+                                                        .background(Color(.systemIndigo))
+                                                        .cornerRadius(12)
+                                                }
+                                                .frame(width: (2 * UIScreen.main.bounds.width / 3) - 50 )
+                                            }
+                                            .padding(.horizontal, 20)
+                                    }
+                                    .presentationDetents([.medium, .fraction(0.7)])
                                 }
-                                .frame(width: (2 * UIScreen.main.bounds.width / 3) - 50 )
-                            }
-                            .padding(.horizontal, 20)
 
 
                         
@@ -171,7 +191,7 @@ struct HomeView: View {
                         .foregroundColor(.white)
                         .padding()
                         .frame(maxWidth: .infinity)
-                        .background(Color(red: 0.0196078431372549, green: 0.11372549019607843, blue: 0.25098039215686274))
+                        .background(Color(.systemIndigo))
                         .cornerRadius(12)
                         .padding()
                 }
@@ -186,21 +206,51 @@ struct HomeView: View {
         
         .onChange(of: viewModel.distanceFromProtectedUser) { distance in
                     if distance >= 10000 {
-                        IsPresentingDistanceMessage = true
+                        isShowingSheet = true
                     } else {
-                        IsPresentingDistanceMessage = false
-                    }
+                        isShowingSheet = false
+                    }   
                 }
-                .sheet(isPresented: $IsPresentingDistanceMessage) {
-                    DistanceMessage(distance: viewModel.distanceFromProtectedUser, viewModel: viewModel, IsPresentingDistanceMessage: $IsPresentingDistanceMessage)
-                }
+        .sheet(isPresented: $isShowingSheet) {
+            ZStack {
+                Color(red: 0.86, green: 0.86, blue: 0.86)
+                Text("The user: **\(viewModel.protectingName)** is **\(String(format: "%.1f", viewModel.distanceFromProtectedUser / 1000))** KM away from you \n\n\n Please be aware that the user you are protecting is currently to far away from you!")
+                    .font(.title)
+                    .multilineTextAlignment(.center)
+                
+                Spacer()
+                
+            }
+            .presentationDetents([.medium, .fraction(0.6)])
+        }
         
                 .onChange(of: viewModel.showAlert) { showAlert in
                     isPresentingAlarmMessage = showAlert
+                    isShowingSheetAlarm = true
                 }
-                .sheet(isPresented: $isPresentingAlarmMessage) {
-                    AlarmTimeMessage(viewModel: viewModel, IsPresentingDistanceMessage: $isPresentingAlarmMessage)
-                }
+                .sheet(isPresented: $isShowingSheetAlarm) {
+                        ZStack {
+                            Color(red: 0.86, green: 0.86, blue: 0.86)
+                            Text("**Alarm is set to \(viewModel.alarmStatus)** \n Time to go home.")
+                                .multilineTextAlignment(.center)
+                        }
+                        .presentationDetents([.medium, .fraction(0.4)])
+                    }
+//                .sheet(isPresented: $isPresentingAlarmMessage) {
+//                    AlarmTimeMessage(viewModel: viewModel, IsPresentingDistanceMessage: $isPresentingAlarmMessage)
+//                }
+        
+        
+//        Button("Show the sheet!") {
+//            isShowingSheet = true
+//        }
+//        .sheet(isPresented: $isShowingSheet) {
+//            ZStack {
+//                Text("This is my sheet. It could be a whole view, or just a text.")
+//                    .multilineTextAlignment(.center)
+//            }
+//            .presentationDetents([.medium, .fraction(0.4)])
+//        }
 
     }
     

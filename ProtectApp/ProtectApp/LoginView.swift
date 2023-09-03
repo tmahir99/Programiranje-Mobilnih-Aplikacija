@@ -8,14 +8,13 @@
 import SwiftUI
 
 struct LoginView: View {
+    
 
-  // 1
   @EnvironmentObject var viewModel: AuthenticationViewModel
 
   var body: some View {
       VStack {
           
-          // 2
           Circle()
               .stroke(Color(.systemIndigo), lineWidth: 19) // Adjust the lineWidth as needed
               .frame(width: 103.0, height: 103.0)
@@ -39,7 +38,6 @@ struct LoginView: View {
           //        .padding()
           
           
-          // 3
 //          UserInfo()
 //              .padding(.horizontal, 80.0)
 //              .padding(.top, 30)
@@ -56,8 +54,10 @@ struct LoginView: View {
                   .cornerRadius(12)
                   .padding()
           }
+
           
       }
 
   }
 }
+

@@ -134,7 +134,6 @@ class AuthenticationViewModel: ObservableObject {
 //                                            for location in locationsArray {
 //                                                print("Coordinate: \(location.coordinate.latitude), \(location.coordinate.longitude)")
 //                                                print("Timestamp: \(location.timestamp)")
-//                                                print("-----------------------")
 //                                            }
                                         } else {
                                             print("Error decoding locations data")
@@ -250,7 +249,6 @@ class AuthenticationViewModel: ObservableObject {
             
             //let viewModel = AuthenticationViewModel()
                 
-            //print("fakaj me direkt ako znam \(self?.locations.last)")
             self?.checkDistanceFromProtectedUser(location: self?.locationManager.location, locations: self?.locations ?? [])
         }
         self.timer?.fire()
@@ -259,9 +257,7 @@ class AuthenticationViewModel: ObservableObject {
     func checkDistanceFromProtectedUser(location: CLLocation?, locations: [Location]) {
         guard let currentLocation = location else { return }
         let testLocation = locations.last
-        //print("\(userType) and last location latitude: \(testLocation?.coordinate.latitude) and last location longitude: \(testLocation?.coordinate.longitude)")
-        //print("longitude : \(location?.coordinate.longitude) latitude : \(location?.coordinate.latitude) demek njegova lokacija test")
-
+        
         if userType == .protecting, let protectedUserLocation = locations.last {
             let currentCoordinate = CLLocationCoordinate2D(latitude: currentLocation.coordinate.latitude, longitude: currentLocation.coordinate.longitude)
             let protectedUserCoordinate = protectedUserLocation.coordinate
@@ -282,11 +278,11 @@ class AuthenticationViewModel: ObservableObject {
     
     func checkAlarmTime(currentTime: String, alarmStatus: String) {
         let formatter = DateFormatter()
-        formatter.dateFormat = "HH:mm" // Assuming the time format is "HH:mm"
+        formatter.dateFormat = "HH:mm"
         
         guard let currentTimeDate = formatter.date(from: currentTime),
               let alarmTimeDate = formatter.date(from: alarmStatus) else {
-            return // Invalid date format, return early
+            return
         }
 
         let calendar = Calendar.current
@@ -294,17 +290,17 @@ class AuthenticationViewModel: ObservableObject {
 
         switch comparison {
         case .orderedSame:
-            // Alarm is now, show alert
+            
             alertMessage = "Time to go home"
             showAlert = true
         case .orderedDescending:
-            // Current time is past the alarm time, show alert if not already shown
+            
             if !showAlert {
                 alertMessage = "You missed the alarm time to go home"
                 showAlert = true
             }
         default:
-            // Alarm is in the future, do nothing
+            
             break
         }
     }
@@ -388,16 +384,16 @@ class AuthenticationViewModel: ObservableObject {
                     return
                 }
                 
-                // Update the current user's information
+                
                 let email = "\(protectorData["email"] ?? "")"
-                let currentUserRef = usersRef.child(modifiedEmail2!) // Use modified email as the key
+                let currentUserRef = usersRef.child(modifiedEmail2!)
                 currentUserRef.updateChildValues([
                     "protectingEmail": email,
                     "protectingName" :  "\(protectorData["name"] ?? "")",
                     "UserType": "protecting",
                     "protector": "noone"])
                 
-                // Update the protector's information
+                
                 let protectorRef = usersRef.child(modifiedEmail)
                 protectorRef.updateChildValues([
                     "protectorEmail": "\(currentUser.profile?.email ?? "")",

@@ -3,7 +3,6 @@
 //  ProtectApp
 //
 //  Created by Mahir Tahirovic on 23.12.22..
-//
 
 import Foundation
 struct UserModel: Identifiable{
