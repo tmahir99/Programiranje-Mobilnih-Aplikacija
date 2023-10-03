@@ -43,12 +43,6 @@ final class LocationManager: NSObject, ObservableObject {
             }
         }
     }
-    
-
-
-
-
-
 }
 
 extension LocationManager: CLLocationManagerDelegate {
@@ -58,7 +52,7 @@ extension LocationManager: CLLocationManagerDelegate {
         DispatchQueue.main.async {
             self.location = location
             let viewModel = AuthenticationViewModel()
-            viewModel.checkDistanceFromProtectedUser(location: location, locations: viewModel.locations)
+            viewModel.checkDistanceFromProtectedUser(selectedLocation : viewModel.selectedLocation,currentLocation: location, locations: viewModel.locations)
 
         }
     }

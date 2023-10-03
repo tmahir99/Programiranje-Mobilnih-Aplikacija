@@ -10,7 +10,7 @@ struct LocationMapView: View {
     @State private var isPresentingLocationDetails = false
 
     var body: some View {
-        Map(coordinateRegion: $coordinateRegion, annotationItems: locations) { location in
+        Map(coordinateRegion: $coordinateRegion, showsUserLocation: true, annotationItems: locations) { location in
             MapAnnotation(coordinate: location.coordinate) {
                 Button(action: {
                     selectedLocation = location
@@ -22,6 +22,12 @@ struct LocationMapView: View {
                         .foregroundColor(.red)
                 }
                 .buttonStyle(PlainButtonStyle())
+            }
+        }
+        .onAppear {
+            // Set the coordinateRegion to center around the last location in the array
+            if let lastLocation = locations.last {
+                coordinateRegion.center = lastLocation.coordinate
             }
         }
         .sheet(item: $selectedLocation) { location in

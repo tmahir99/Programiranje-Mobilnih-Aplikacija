@@ -28,6 +28,8 @@ class AuthenticationViewModel: ObservableObject {
     @Published var locations1: [Location] = []
     @Published var distanceFromProtectedUser : Double = 0;
     
+    @Published var selectedLocation: CLLocationCoordinate2D?
+    
     
     @Published var showAlert = false
     @Published var alertMessage = ""
@@ -249,19 +251,27 @@ class AuthenticationViewModel: ObservableObject {
             
             //let viewModel = AuthenticationViewModel()
                 
-            self?.checkDistanceFromProtectedUser(location: self?.locationManager.location, locations: self?.locations ?? [])
+            self?.checkDistanceFromProtectedUser(selectedLocation: self?.selectedLocation,currentLocation: self?.locationManager.location, locations: self?.locations ?? [])
         }
         self.timer?.fire()
     }
 
-    func checkDistanceFromProtectedUser(location: CLLocation?, locations: [Location]) {
-        guard let currentLocation = location else { return }
-        let testLocation = locations.last
-        
+    func checkDistanceFromProtectedUser(selectedLocation: CLLocationCoordinate2D?, currentLocation: CLLocation?, locations: [Location]) {
         if userType == .protecting, let protectedUserLocation = locations.last {
-            let currentCoordinate = CLLocationCoordinate2D(latitude: currentLocation.coordinate.latitude, longitude: currentLocation.coordinate.longitude)
+            let currentCoordinate: CLLocationCoordinate2D
+            
+            if let selectedLocation = selectedLocation {
+                currentCoordinate = selectedLocation
+                print("sad je selected location \(currentCoordinate)")
+            } else if let currentLocation = currentLocation {
+                currentCoordinate = CLLocationCoordinate2D(latitude: currentLocation.coordinate.latitude, longitude: currentLocation.coordinate.longitude)
+                print("sad je current location \(currentCoordinate)")
+            } else {
+                return // Return early if neither selectedLocation nor currentLocation is available
+                
+            }
+            
             let protectedUserCoordinate = protectedUserLocation.coordinate
-
             let currentLocation = CLLocation(latitude: currentCoordinate.latitude, longitude: currentCoordinate.longitude)
             let protectedUserLocation = CLLocation(latitude: protectedUserCoordinate.latitude, longitude: protectedUserCoordinate.longitude)
 
@@ -275,6 +285,7 @@ class AuthenticationViewModel: ObservableObject {
             }
         }
     }
+
     
     func checkAlarmTime(currentTime: String, alarmStatus: String) {
         let formatter = DateFormatter()
