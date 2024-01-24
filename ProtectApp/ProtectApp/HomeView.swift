@@ -104,128 +104,145 @@ struct HomeView: View {
                             .multilineTextAlignment(.leading)
                         Spacer()
                         
-                        Button("Sequrity settings!") {
+                        Button("Security settings!") {
                             isShowingSheetSettings = true
                         }.foregroundColor(.white)
-                            .padding()
-                            .frame(maxWidth: .infinity)
-                            .background(Color(.systemIndigo))
-                            .cornerRadius(12)
-                            .padding()
-                            .sheet(isPresented: $isShowingSheetSettings) {
- 
-                                            Button("Set the alarm!") {
-                                                isShowingSheetButton = true
-                                            }.foregroundColor(.white)
-                                                .padding()
-                                                .frame(maxWidth: .infinity)
-                                                .background(Color(.systemIndigo))
-                                                .cornerRadius(12)
-                                                .padding()
-                                                .sheet(isPresented: $isShowingSheetButton) {
-                                                    ZStack {
-                                                        Color(red: 0.86, green: 0.86, blue: 0.86)
-                                                        
-                                                        
-                                                        HStack(spacing: 0) {
-                                                            DatePicker("", selection: $currentDate, displayedComponents: .hourAndMinute)
-                                                                .labelsHidden()
-                                                                .frame(width: (UIScreen.main.bounds.width / 3) - 20 )
-                                                            
-                                                            Button(action: {
-                                                                viewModel.saveProtectorAlarm(alarm: currentDate)
-                                                            }) {
-                                                                Text("Adjust the Alarm")
-                                                                    .foregroundColor(.white)
-                                                                    .padding()
-                                                                    .frame(maxWidth: .infinity)
-                                                                    .background(Color(.systemIndigo))
-                                                                    .cornerRadius(12)
-                                                            }
-                                                            .frame(width: (2 * UIScreen.main.bounds.width / 3) - 50 )
-                                                        }
-                                                        .padding(.horizontal, 20)
-                                                    }
-                                                    //.presentationDetents([.medium, .fraction(0.5)])
-                                                }
-
-                                    //.presentationDetents([.large, .fraction(0.8)])
-                                    
-                                    
-                                    
-                                            Button("Set the tracking location!") {
-                                                isShowingSheetLocation = true
-                                            }.foregroundColor(.white)
-                                                .frame(maxWidth: .infinity)
-                                                .background(Color(.systemIndigo))
-                                                .cornerRadius(12)
-                                                .frame(minHeight: 50)
-                                                .frame(height: 50)
-                                                .sheet(isPresented: $isShowingSheetLocation){
-                                                    LocationPicker(selectedLocation: $viewModel.selectedLocation, isPresented: $isShowingSheetLocation, viewModel: viewModel, locationManager: locationManager)
+                        .padding()
+                        .frame(maxWidth: .infinity)
+                        .background(Color(.systemIndigo))
+                        .cornerRadius(12)
+                        .padding()
+                        .sheet(isPresented: $isShowingSheetSettings) {
+                            NavigationView {
+                                VStack {
+                                    // Set the alarm sheet
+                                    Button("Set the alarm!") {
+                                        isShowingSheetButton = true
+                                    }.foregroundColor(.white)
+                                    .padding()
+                                    .frame(maxWidth: .infinity)
+                                    .background(Color(.systemIndigo))
+                                    .cornerRadius(12)
+                                    .padding()
+                                    .sheet(isPresented: $isShowingSheetButton) {
+                                        NavigationView {
+                                            ZStack {
+                                                HStack(spacing: 0) {
+                                                    DatePicker("", selection: $currentDate, displayedComponents: .hourAndMinute)
+                                                        .labelsHidden()
+                                                        .frame(width: (UIScreen.main.bounds.width / 3) - 20 )
                                                     
+                                                    Button(action: {
+                                                        // viewModel.saveProtectorAlarm(alarm: currentDate) // Uncomment this line if needed
+                                                    }) {
+                                                        Text("Adjust the Alarm")
+                                                            .foregroundColor(.white)
+                                                            .padding()
+                                                            .frame(maxWidth: .infinity)
+                                                            .background(Color(.systemIndigo))
+                                                            .cornerRadius(12)
+                                                    }
+                                                    .frame(width: (2 * UIScreen.main.bounds.width / 3) - 50 )
                                                 }
-                                            
-                                            
-                                            
-                                            Button("Alarm range") {
-                                                isShowingSheetPicker = true
-                                            }.foregroundColor(.white)
-                                                .frame(maxWidth: .infinity)
-                                                .background(Color(.systemIndigo))
-                                                .cornerRadius(12)
-                                                .frame(minHeight: 50)
-                                                .frame(height: 50)
-                                                .sheet(isPresented: $isShowingSheetPicker){
-                                                    ZStack {
-                                                        Color(red: 0.86, green: 0.86, blue: 0.86)
-                                                        
-                                                        
-                                                        HStack(spacing: 0) {
-                                                            Text("Selected Value: \(Int(selectedValue))") // Display the selected value as an integer
-                                                            Slider(value: $selectedValue, in: 500...10000, step: 50)
-                                                                .padding()
-                                                            
-                                                        }
-                                                        .padding(.horizontal, 20)
-
-                                            
-                                            
+                                                .padding(.horizontal, 20)
+                                            }
+                                            .navigationBarTitle("Set the Alarm", displayMode: .inline)
+                                            .navigationBarItems(
+                                                trailing:
+                                                    Button(action: {
+                                                        isShowingSheetButton = false
+                                                    }) {
+                                                        Text("Done")
+                                                    }
+                                            )
                                         }
-                                        .padding(.horizontal, 20)
                                     }
-                                
+                                    
+                                    // Set the tracking location sheet
+                                    Button("Set the tracking location!") {
+                                        isShowingSheetLocation = true
+                                    }.foregroundColor(.white)
+                                    .padding()
+                                    .frame(maxWidth: .infinity)
+                                    .background(Color(.systemIndigo))
+                                    .cornerRadius(12)
+                                    .padding()
+                                    .sheet(isPresented: $isShowingSheetLocation){
+                                        LocationPicker(selectedLocation: $viewModel.selectedLocation, isPresented: $isShowingSheetLocation,viewModel: viewModel, locationManager: locationManager)
+                                    }
+                                    
+                                    // Set the alarm range sheet
+                                    Button("Alarm range") {
+                                        isShowingSheetPicker = true
+                                    }.foregroundColor(.white)
+                                    .padding()
+                                    .frame(maxWidth: .infinity)
+                                    .background(Color(.systemIndigo))
+                                    .cornerRadius(12)
+                                    .padding()
+                                    .sheet(isPresented: $isShowingSheetPicker) {
+                                        NavigationView {
+                                            ZStack {
+                                                HStack(spacing: 0) {
+                                                    Text("Selected Value: \(Int(selectedValue)) meters")
+                                                    Slider(value: $selectedValue, in: 500...10000, step: 50)
+                                                        .padding()
+                                                }
+                                                .padding(.horizontal, 20)
+                                            }
+                                            .padding(.horizontal, 20)
+                                            .navigationBarTitle("Select Alarm range", displayMode: .inline)
+                                            .navigationBarItems(
+                                                trailing:
+                                                    Button(action: {
+                                                        isShowingSheetPicker = false
+                                                    }) {
+                                                        Text("Done")
+                                                    }
+                                            )
+                                        }
+                                    }
+                                }
+                                .navigationBarTitle("Security Settings", displayMode: .inline)
+                                .navigationBarItems(
+                                    trailing:
+                                        Button(action: {
+                                            isShowingSheetSettings = false
+                                        }) {
+                                            Text("Done")
+                                        }
+                                )
                             }
-                            //.presentationDetents([.large, .fraction(0.8)])
-                        if viewModel.distanceFromProtectedUser != 0{
-                            if Int(viewModel.distanceFromProtectedUser) >= Int(selectedValue){
-                                Text("Current distance from the pin on the map is: **\(String(format: "%.1f", viewModel.distanceFromProtectedUser))**  meter's")
-                                    .foregroundColor(.red)
-                                    .multilineTextAlignment(.center)
-                            }else{
-                                Text("Current distance from the pin on the map is: **\(String(format: "%.1f", viewModel.distanceFromProtectedUser))**  meter's")
-                                    .foregroundColor(.green)
-                                    .multilineTextAlignment(.center)
-                            }
+                        
                     }
-                        
-                        //Spacer()
-                        
 
-
-//                        {
-//
-//                                VStack {
-//                                            Text("Selected Value: \(Int(selectedValue))") // Display the selected value as an integer
-//
-//                                            Slider(value: $selectedValue, in: 500...10000, step: 50)
-//                                                .padding()
-//                                        }
-//
-//                            }
-
-                        
-                        
+                                //.presentationDetents([.large, .fraction(0.8)])
+                                if viewModel.distanceFromProtectedUser != 0{
+                                    if Int(viewModel.distanceFromProtectedUser) >= Int(selectedValue){
+                                        Text("Current distance from the pin on the map is: **\(String(format: "%.1f", viewModel.distanceFromProtectedUser))**  meter's")
+                                            .foregroundColor(.red)
+                                            .multilineTextAlignment(.center)
+                                    }else{
+                                        Text("Current distance from the pin on the map is: **\(String(format: "%.1f", viewModel.distanceFromProtectedUser))**  meter's")
+                                            .foregroundColor(.green)
+                                            .multilineTextAlignment(.center)
+                                    }
+                                }
+                                
+                                //Spacer()
+                                
+                                
+                                
+                                //                        {
+                                //
+                                //                                VStack {
+                                //                                            Text("Selected Value: \(Int(selectedValue))") // Display the selected value as an integer
+                                //
+                                //                                            Slider(value: $selectedValue, in: 500...10000, step: 50)
+                                //                                                .padding()
+                                //                                        }
+                                //
+                                //                            }
 
                     }
 
