@@ -133,7 +133,7 @@ struct HomeView: View {
                                                         .frame(width: (UIScreen.main.bounds.width / 3) - 20 )
                                                     
                                                     Button(action: {
-                                                        // viewModel.saveProtectorAlarm(alarm: currentDate) // Uncomment this line if needed
+                                                         viewModel.saveProtectorAlarm(alarm: currentDate) // Uncomment this line if needed
                                                     }) {
                                                         Text("Adjust the Alarm")
                                                             .foregroundColor(.white)

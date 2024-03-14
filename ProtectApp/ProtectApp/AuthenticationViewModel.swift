@@ -418,6 +418,7 @@ class AuthenticationViewModel: ObservableObject {
         }
     }
 
+
     func saveProtectorAlarm(alarm: Date) {
         let modifiedEmail = protectingEmail.replacingOccurrences(of: ".", with: "=")
         
@@ -436,11 +437,25 @@ class AuthenticationViewModel: ObservableObject {
                     "alarm": "\(alarmTime)"])
                 
                 print("Protector information updated successfully")
+                
+                // Show success notification (toast)
+                self.showAlert(message: "Alarm set successfully")
+                
             } else {
                 print("Protector email not found in the database")
+                
+                // Show error notification (toast)
+                self.showAlert(message: "Something went wrong")
             }
         }
     }
+
+    func showAlert(message: String) {
+        let alertController = UIAlertController(title: nil, message: message, preferredStyle: .alert)
+        let okAction = UIAlertAction(title: "OK", style: .default, handler: nil)
+        alertController.addAction(okAction)
+    }
+
 
 
 
